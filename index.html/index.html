@@ -9,7 +9,7 @@
         body { margin: 0; background-color: #000; overflow: hidden; font-family: Helvetica, sans-serif; }
         
         /* [Image A] Login Screen */
-        #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
+        #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; text-align: center; }
         
         /* [Image B] Data Tile */
         .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; }
@@ -18,22 +18,23 @@
         .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 5px; }
 
         /* Navigation Menu */
-        #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; z-index: 100; }
+        #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; z-index: 1500; }
         button { color: #8ff; background: transparent; border: 1px solid #8ff; padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 0 5px; font-weight: bold; }
 
-        /* [Image B] FIXED: Color Legend Bar */
+        /* [Image B] FIXED: Color Legend Bar - High Z-Index */
         #legend { 
             position: absolute; 
             bottom: 80px; 
             right: 30px; 
-            display: none; /* Becomes flex on data load */
+            display: none; 
             align-items: center; 
             color: white; 
             font-size: 12px; 
-            z-index: 100; 
-            background: rgba(0,0,0,0.5); 
-            padding: 10px; 
-            border-radius: 5px;
+            z-index: 1600; 
+            background: rgba(0,0,0,0.6); 
+            padding: 12px; 
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
         }
         .gradient-bar { 
             width: 150px; 
@@ -47,6 +48,9 @@
     <script>
         window.handleCredentialResponse = (response) => {
             document.getElementById('login-screen').style.display = 'none';
+            // Show legend and menu immediately after login
+            document.getElementById('menu').style.display = 'block';
+            document.getElementById('legend').style.display = 'flex';
             window.dispatchEvent(new CustomEvent('init-3d'));
         };
     </script>
@@ -108,10 +112,6 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 if (data.values) {
-                    // SHOW THE HIDDEN UI BITS
-                    document.getElementById('menu').style.display = 'block';
-                    document.getElementById('legend').style.display = 'flex';
-                    
                     init(data.values);
                     animate();
                 }
@@ -130,7 +130,7 @@
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Coloring Logic
+                // Color Logic: Red < 100k, Orange < 200k, Green > 200k
                 if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.7)'; 
                 else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.7)'; 
                 else element.style.backgroundColor = 'rgba(58, 132, 72, 0.7)'; 
