@@ -5,11 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: Helvetica, sans-serif; }
         
-        /* Image A Design */
+        /* Image A Design Implementation */
         #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center; }
         #login-screen h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
         #login-screen p { color: #666; margin-bottom: 30px; max-width: 400px; padding: 0 20px; }
@@ -27,13 +26,13 @@
     </style>
 
     <script>
-        // GLOBAL CALLBACK FIX: Attaching to window so Google GSI can find it
+        // GLOBAL CALLBACK: Fixes the "callback is not a function" error
         window.handleCredentialResponse = (response) => {
             console.log("Login Successful");
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('menu').style.display = 'block';
             
-            // Dispatch custom event to tell the 3D module to start
+            // Dispatch custom event to trigger the 3D module
             window.dispatchEvent(new CustomEvent('google-login-success'));
         };
     </script>
@@ -84,9 +83,15 @@
         window.addEventListener('google-login-success', fetchSheetData);
 
         async function fetchSheetData() {
-            const url = `https://docs.google.com/spreadsheets/d/1egK0W82Oltho21pc79BA0QcUdQv31f5wYEtiC-wN_Sk/edit?usp=sharing`;
+            // Target Sheet1 and the range A2:F
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:F?key=${API_KEY}`;
             try {
                 const response = await fetch(url);
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error("API Response was not JSON. Check Sheet sharing settings. Received:", text);
+                    return;
+                }
                 const data = await response.json();
                 if (data.values) {
                     init(data.values);
@@ -102,17 +107,19 @@
 
             data.forEach((row, i) => {
                 const [name, photo, age, country, interest, netWorth] = row;
+                
+                // Parse Net Worth for coloring logic
                 const nw = parseFloat(netWorth.replace(/[$,]/g, ''));
 
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Color Logic 
-                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.8)'; // Red < $100K
-                else if (nw >= 100000 && nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.8)'; // Orange > $100K
-                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.8)'; // Green > $200K
+                // Background Coloring Logic based on Net Worth instructions
+                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.8)'; // Red
+                else if (nw >= 100000 && nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.8)'; // Orange
+                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.8)'; // Green
 
-                // Image B Structure [cite: 13, 95]
+                // Build Tile Content according to Image B
                 const img = document.createElement('img');
                 img.src = photo;
                 element.appendChild(img);
@@ -134,14 +141,14 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table: 20x10 
+                // Table: 20x10 Arrangement
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600;
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Sphere
+            // Sphere Layout
             const vector = new THREE.Vector3();
             for (let i = 0, l = objects.length; i < l; i++) {
                 const phi = Math.acos(-1 + (2 * i) / l);
@@ -153,9 +160,9 @@
                 targets.sphere.push(object);
             }
 
-            // Helix: Double Helix 
+            // Helix: Double Helix Implementation
             for (let i = 0, l = objects.length; i < l; i++) {
-                const strand = (i % 2 === 0) ? 0 : Math.PI;
+                const strand = (i % 2 === 0) ? 0 : Math.PI; // Creates two separate strands
                 const theta = i * 0.2 + strand;
                 const y = -(i * 10) + 500;
                 const object = new THREE.Object3D();
@@ -167,7 +174,7 @@
                 targets.helix.push(object);
             }
 
-            // Grid: 5x4x10 
+            // Grid: 5x4x10 Arrangement as per Image C
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
@@ -221,4 +228,3 @@
     </script>
 </body>
 </html>
-
