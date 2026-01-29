@@ -6,39 +6,77 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        body { margin: 0; background-color: #000; overflow: hidden; font-family: Helvetica, sans-serif; }
+        /* General Setup */
+        body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
         
-        /* [Image A] Login Screen */
-        #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; text-align: center; }
-        
-        /* [Image B] Data Tile */
-        .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; }
-        .element img { width: 85px; height: 85px; margin-top: 15px; border: 1px solid white; object-fit: cover; border-radius: 4px; }
-        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; text-transform: uppercase; }
-        .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 5px; }
+        /* [Image A] Refined Login Screen */
+        #login-screen { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 9999; /* Ensure it stays on top of everything */
+            text-align: center; 
+        }
+        #login-screen h1 { 
+            font-size: 28px; 
+            color: #202124; 
+            margin-bottom: 8px; 
+            font-weight: 500;
+        }
+        #login-screen p { 
+            font-size: 14px; 
+            color: #5f6368; 
+            margin-bottom: 32px; 
+            max-width: 350px; 
+            line-height: 1.5;
+            padding: 0 20px;
+        }
 
-        /* Navigation Menu */
-        #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; z-index: 1500; }
-        button { color: #8ff; background: transparent; border: 1px solid #8ff; padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 0 5px; font-weight: bold; }
+        /* [Image B] Data Tile Structure */
+        .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.4); border: 1px solid rgba(127,255,255,0.2); text-align: center; }
+        .element img { width: 90px; height: 90px; margin-top: 12px; border: 1px solid #fff; object-fit: cover; border-radius: 2px; }
+        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .element .details { font-size: 9px; color: rgba(255,255,255,0.8); margin-top: 4px; }
 
-        /* [Image B] FIXED: Color Legend Bar - High Z-Index */
+        /* UI Navigation Menu */
+        #menu { position: absolute; bottom: 30px; width: 100%; text-align: center; display: none; z-index: 2000; }
+        button { 
+            color: #00ffff; 
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid #00ffff; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            margin: 0 8px; 
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover { background: rgba(0,255,255,0.2); box-shadow: 0 0 10px #00ffff; }
+
+        /* [Image B] Legend Bar */
         #legend { 
             position: absolute; 
-            bottom: 80px; 
+            bottom: 90px; 
             right: 30px; 
             display: none; 
             align-items: center; 
-            color: white; 
-            font-size: 12px; 
-            z-index: 1600; 
-            background: rgba(0,0,0,0.6); 
+            color: #fff; 
+            font-size: 11px; 
+            z-index: 2000; 
+            background: rgba(0,0,0,0.7); 
             padding: 12px; 
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .gradient-bar { 
-            width: 150px; 
-            height: 12px; 
+            width: 120px; 
+            height: 10px; 
             background: linear-gradient(to right, #ef3022, #ffa500, #3a8448); 
             margin: 0 10px; 
             border: 1px solid #fff; 
@@ -46,12 +84,15 @@
     </style>
 
     <script>
+        // Global handler for Google Sign-In
         window.handleCredentialResponse = (response) => {
-            document.getElementById('login-screen').style.display = 'none';
-            // Show legend and menu immediately after login
-            document.getElementById('menu').style.display = 'block';
-            document.getElementById('legend').style.display = 'flex';
-            window.dispatchEvent(new CustomEvent('init-3d'));
+            document.getElementById('login-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('menu').style.display = 'block';
+                document.getElementById('legend').style.display = 'flex';
+            }, 500);
+            window.dispatchEvent(new CustomEvent('start-3d-scene'));
         };
     </script>
 </head>
@@ -59,12 +100,13 @@
 
     <div id="login-screen">
         <h1>Welcome Back</h1>
-        <p>Please sign in to view the directory</p>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>
         <div id="g_id_onload"
              data-client_id="890084102471-1m4m60221cn3l6vfspk05t2338ln5jmr.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse">
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
         </div>
-        <div class="g_id_signin" data-type="standard"></div>
+        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
     </div>
 
     <div id="container"></div>
@@ -104,7 +146,7 @@
         const objects = [];
         const targets = { table: [], sphere: [], helix: [], grid: [] };
 
-        window.addEventListener('init-3d', fetchSheetData);
+        window.addEventListener('start-3d-scene', fetchSheetData);
 
         async function fetchSheetData() {
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:F?key=${API_KEY}`;
@@ -115,7 +157,7 @@
                     init(data.values);
                     animate();
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Sheets Fetch Error:", err); }
         }
 
         function init(data) {
@@ -130,10 +172,10 @@
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Color Logic: Red < 100k, Orange < 200k, Green > 200k
-                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.7)'; 
-                else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.7)'; 
-                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.7)'; 
+                // instruction coloring logic
+                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; 
+                else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; 
+                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.75)'; 
 
                 const img = document.createElement('img');
                 img.src = photo;
@@ -156,26 +198,40 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table: 20x10
+                // Target: Table (20x10)
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Double Helix Logic
+            // Target: Sphere
+            const vector = new THREE.Vector3();
+            for (let i = 0, l = objects.length; i < l; i++) {
+                const phi = Math.acos(-1 + (2 * i) / l);
+                const theta = Math.sqrt(l * Math.PI) * phi;
+                const object = new THREE.Object3D();
+                object.position.setFromSphericalCoords(800, phi, theta);
+                vector.copy(object.position).multiplyScalar(2);
+                object.lookAt(vector);
+                targets.sphere.push(object);
+            }
+
+            // Target: Double Helix
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
                 const y = -(i * 8) + 450;
                 const object = new THREE.Object3D();
                 object.position.setFromCylindricalCoords(900, theta, y);
-                const vector = new THREE.Vector3(object.position.x * 2, object.position.y, object.position.z * 2);
+                vector.x = object.position.x * 2;
+                vector.y = object.position.y;
+                vector.z = object.position.z * 2;
                 object.lookAt(vector);
                 targets.helix.push(object);
             }
 
-            // Grid: 5x4x10
+            // Target: Grid (5x4x10)
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
@@ -192,6 +248,7 @@
             controls.addEventListener('change', render);
 
             document.getElementById('table').addEventListener('click', () => transform(targets.table, 2000));
+            document.getElementById('sphere').addEventListener('click', () => transform(targets.sphere, 2000));
             document.getElementById('helix').addEventListener('click', () => transform(targets.helix, 2000));
             document.getElementById('grid').addEventListener('click', () => transform(targets.grid, 2000));
 
