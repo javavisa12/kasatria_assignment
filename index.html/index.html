@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kasatria Software Developer Assignment</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { margin: 0; background-color: #000; overflow: hidden; font-family: Helvetica, sans-serif; }
+        
+        /* Image A: Login Screen Styling */
+        #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center; }
+        #login-screen h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
+        #login-screen p { color: #666; margin-bottom: 30px; max-width: 400px; padding: 0 20px; }
+
+        #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; }
+        
+        /* Image B: Tile Data Structure */
+        .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; }
+        .element:hover { box-shadow: 0px 0px 12px rgba(0,255,255,0.75); border: 1px solid rgba(127,255,255,0.75); }
+        .element img { width: 90px; height: 90px; margin-top: 15px; border: 1px solid white; object-fit: cover; }
+        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 8px; padding: 0 5px; text-transform: uppercase; }
+        .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 4px; line-height: 1.2; }
+
+        button { color: #8ff; background: transparent; border: 1px solid #8ff; padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 0 5px; }
+        button:hover { background-color: rgba(0,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1>Welcome Back</h1>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit</p>
+        <div id="g_id_onload"
+             data-client_id="890084102471-1m4m60221cn3l6vfspk05t2338ln5jmr.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue"></div>
+    </div>
+
+    <div id="container"></div>
+    <div id="menu">
+        <button id="table">TABLE</button>
+        <button id="sphere">SPHERE</button>
+        <button id="helix">HELIX</button>
+        <button id="grid">GRID</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import TWEEN from 'three/addons/libs/tween.module.js';
+        import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+        import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+        const SPREADSHEET_ID = '1egK0W82Oltho21pc79BA0QcUdQv31f5wYEtiC-wN_Sk';
+        const API_KEY = 'AIzaSyAFxfQzAIViNF0-opLFq1CHmhMzkb4CPt4'; 
+
+        let camera, scene, renderer, controls;
+        const objects = [];
+        const targets = { table: [], sphere: [], helix: [], grid: [] };
+
+        window.handleCredentialResponse = (response) => {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+            fetchSheetData();
+        };
+
+        async function fetchSheetData() {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:F?key=${API_KEY}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.values) {
+                    init(data.values);
+                    animate();
+                }
+            } catch (error) { console.error("Data fetch failed:", error); }
+        }
+
+        function init(data) {
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.z = 3000;
+            scene = new THREE.Scene();
+
+            data.forEach((row, i) => {
+                const [name, photo, age, country, interest, netWorth] = row;
+                const nw = parseFloat(netWorth.replace(/[$,]/g, ''));
+
+                const element = document.createElement('div');
+                element.className = 'element';
+                
+                // Coloring Logic 
+                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.7)'; 
+                else if (nw >= 100000 && nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.7)'; 
+                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.7)'; 
+
+                const img = document.createElement('img');
+                img.src = photo;
+                element.appendChild(img);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'name';
+                nameDiv.textContent = name;
+                element.appendChild(nameDiv);
+
+                const details = document.createElement('div');
+                details.className = 'details';
+                details.innerHTML = `${interest}<br>${country} | Age: ${age}`;
+                element.appendChild(details);
+
+                const objectCSS = new CSS3DObject(element);
+                objectCSS.position.x = Math.random() * 4000 - 2000;
+                objectCSS.position.y = Math.random() * 4000 - 2000;
+                objectCSS.position.z = Math.random() * 4000 - 2000;
+                scene.add(objectCSS);
+                objects.push(objectCSS);
+
+                // Table: 20x10 arrangement 
+                const tableObj = new THREE.Object3D();
+                tableObj.position.x = ((i % 20) * 170) - 1600;
+                tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
+                targets.table.push(tableObj);
+            });
+
+            // Sphere
+            const vector = new THREE.Vector3();
+            for (let i = 0, l = objects.length; i < l; i++) {
+                const phi = Math.acos(-1 + (2 * i) / l);
+                const theta = Math.sqrt(l * Math.PI) * phi;
+                const object = new THREE.Object3D();
+                object.position.setFromSphericalCoords(800, phi, theta);
+                vector.copy(object.position).multiplyScalar(2);
+                object.lookAt(vector);
+                targets.sphere.push(object);
+            }
+
+            // Helix: Double Helix 
+            for (let i = 0, l = objects.length; i < l; i++) {
+                const strand = (i % 2 === 0) ? 0 : Math.PI;
+                const theta = i * 0.2 + strand;
+                const y = -(i * 10) + 500;
+                const object = new THREE.Object3D();
+                object.position.setFromCylindricalCoords(900, theta, y);
+                vector.x = object.position.x * 2;
+                vector.y = object.position.y;
+                vector.z = object.position.z * 2;
+                object.lookAt(vector);
+                targets.helix.push(object);
+            }
+
+            // Grid: 5x4x10 arrangement 
+            for (let i = 0; i < objects.length; i++) {
+                const object = new THREE.Object3D();
+                object.position.x = ((i % 5) * 400) - 800;
+                object.position.y = (-(Math.floor(i / 5) % 4) * 400) + 600;
+                object.position.z = (Math.floor(i / 20)) * -800 + 800;
+                targets.grid.push(object);
+            }
+
+            renderer = new CSS3DRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            controls = new TrackballControls(camera, renderer.domElement);
+            controls.addEventListener('change', render);
+
+            document.getElementById('table').addEventListener('click', () => transform(targets.table, 2000));
+            document.getElementById('sphere').addEventListener('click', () => transform(targets.sphere, 2000));
+            document.getElementById('helix').addEventListener('click', () => transform(targets.helix, 2000));
+            document.getElementById('grid').addEventListener('click', () => transform(targets.grid, 2000));
+
+            transform(targets.table, 2000);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function transform(targetArr, duration) {
+            TWEEN.removeAll();
+            objects.forEach((obj, i) => {
+                const target = targetArr[i];
+                if (target) {
+                    new TWEEN.Tween(obj.position).to({ x: target.position.x, y: target.position.y, z: target.position.z }, Math.random() * duration + duration).easing(TWEEN.Easing.Exponential.InOut).start();
+                    new TWEEN.Tween(obj.rotation).to({ x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration).easing(TWEEN.Easing.Exponential.InOut).start();
+                }
+            });
+            new TWEEN.Tween(this).to({}, duration * 2).onUpdate(render).start();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            controls.update();
+        }
+
+        function render() { renderer.render(scene, camera); }
+    </script>
+</body>
+</html>
