@@ -8,7 +8,7 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; }
         
-        /* [Image A] Welcome Page - EXACT REPRODUCTION */
+        /* [Image A] Welcome Page */
         #login-screen { 
             position: absolute; width: 100%; height: 100%; background: #ffffff; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -17,13 +17,13 @@
         #login-screen h1 { font-size: 42px; color: #000; margin-bottom: 20px; font-weight: 700; }
         #login-screen p { font-size: 18px; color: #333; margin-bottom: 40px; }
 
-        /* [Image B] Data Tile Structure */
+        /* [Image B] Tile Structure */
         .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.4); border: 1px solid rgba(127,255,255,0.2); text-align: center; }
         .element img { width: 90px; height: 90px; margin-top: 15px; border: 1px solid #fff; object-fit: cover; }
         .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; text-transform: uppercase; }
         .element .details { font-size: 9px; color: rgba(255,255,255,0.85); margin-top: 5px; }
 
-        /* [Image 44bb73.png] Navigation Menu */
+        /* Navigation Menu */
         #menu { position: absolute; bottom: 30px; width: 100%; text-align: center; display: none; z-index: 2000; }
         button { 
             color: #00ffff; background: transparent; border: 1px solid #00ffff; 
@@ -44,7 +44,6 @@
     </style>
 
     <script>
-        // Callback to handle login and trigger 3D scene
         window.handleCredentialResponse = (response) => {
             const login = document.getElementById('login-screen');
             login.style.opacity = '0';
@@ -64,17 +63,9 @@
         <p>Please sign in to view the directory</p>
         <div id="g_id_onload"
              data-client_id="890084102471-1m4m60221cn3l6vfspk05t2338ln5jmr.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse"
-             data-auto_prompt="false">
+             data-callback="handleCredentialResponse">
         </div>
-        <div class="g_id_signin" 
-             data-type="standard" 
-             data-shape="pill" 
-             data-theme="filled_blue" 
-             data-text="signin_with" 
-             data-size="large" 
-             data-logo_alignment="left">
-        </div>
+        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue"></div>
     </div>
 
     <div id="container"></div>
@@ -90,7 +81,7 @@
         <button id="sphere">SPHERE</button>
         <button id="helix">HELIX</button>
         <button id="grid">GRID</button>
-    </div>
+        <button id="pyramid">PYRAMID</button> </div>
 
     <script type="importmap">
         {
@@ -112,7 +103,7 @@
 
         let camera, scene, renderer, controls;
         const objects = [];
-        const targets = { table: [], sphere: [], helix: [], grid: [] };
+        const targets = { table: [], sphere: [], helix: [], grid: [], pyramid: [] };
 
         window.addEventListener('login-complete', fetchSheetData);
 
@@ -125,7 +116,7 @@
                     init(data.values);
                     animate();
                 }
-            } catch (err) { console.error("Data fetch failed:", err); }
+            } catch (err) { console.error(err); }
         }
 
         function init(data) {
@@ -166,14 +157,35 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // [Instruction 14] Table: 20x10 Arrangement
+                // Table Target (20x10)
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Target: Sphere
+            // Pyramid (Tetrahedron) Target Math
+            let layer = 0, count = 0, layerLimit = 1;
+            for (let i = 0; i < objects.length; i++) {
+                const object = new THREE.Object3D();
+                
+                // Calculate grid position within the current layer
+                let xPos = (count % layerLimit) * 200 - (layerLimit * 100) + 100;
+                let zPos = Math.floor(count / layerLimit) * 200 - (layerLimit * 100) + 100;
+                let yPos = -layer * 200 + 600;
+
+                object.position.set(xPos, yPos, zPos);
+                targets.pyramid.push(object);
+
+                count++;
+                if (count >= layerLimit * layerLimit) {
+                    layer++;
+                    layerLimit++;
+                    count = 0;
+                }
+            }
+
+            // Sphere Target
             const vector = new THREE.Vector3();
             for (let i = 0, l = objects.length; i < l; i++) {
                 const phi = Math.acos(-1 + (2 * i) / l);
@@ -185,7 +197,7 @@
                 targets.sphere.push(object);
             }
 
-            // [Instruction 14] Double Helix math
+            // Double Helix math
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
@@ -199,7 +211,7 @@
                 targets.helix.push(object);
             }
 
-            // [Instruction 14 / Image C] Grid: 5x4x10
+            // Grid: 5x4x10
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
@@ -219,6 +231,7 @@
             document.getElementById('sphere').addEventListener('click', () => transform(targets.sphere, 2000));
             document.getElementById('helix').addEventListener('click', () => transform(targets.helix, 2000));
             document.getElementById('grid').addEventListener('click', () => transform(targets.grid, 2000));
+            document.getElementById('pyramid').addEventListener('click', () => transform(targets.pyramid, 2000));
 
             transform(targets.table, 2000);
             window.addEventListener('resize', onWindowResize);
