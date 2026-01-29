@@ -8,7 +8,7 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; }
         
-        /* [Image A] Welcome Page Styling */
+        /* [Image A] Welcome Page - EXACT REPRODUCTION */
         #login-screen { 
             position: absolute; width: 100%; height: 100%; background: #ffffff; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -17,13 +17,13 @@
         #login-screen h1 { font-size: 42px; color: #000; margin-bottom: 20px; font-weight: 700; }
         #login-screen p { font-size: 18px; color: #333; margin-bottom: 40px; }
 
-        /* [Image B] Tile Structure */
+        /* [Image B] Data Tile Structure */
         .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.4); border: 1px solid rgba(127,255,255,0.2); text-align: center; }
         .element img { width: 90px; height: 90px; margin-top: 15px; border: 1px solid #fff; object-fit: cover; }
         .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; text-transform: uppercase; }
         .element .details { font-size: 9px; color: rgba(255,255,255,0.85); margin-top: 5px; }
 
-        /* UI Navigation */
+        /* [Image 44bb73.png] Navigation Menu */
         #menu { position: absolute; bottom: 30px; width: 100%; text-align: center; display: none; z-index: 2000; }
         button { 
             color: #00ffff; background: transparent; border: 1px solid #00ffff; 
@@ -31,19 +31,20 @@
         }
         button:hover { background-color: rgba(0,255,255,0.2); }
 
-        /* [Image B] Color Legend Bar */
+        /* [Image 442912.png] Color Legend Bar */
         #legend { 
             position: absolute; bottom: 90px; right: 30px; display: none; 
             align-items: center; color: white; font-size: 12px; z-index: 2000; 
             background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 4px;
         }
         .gradient-bar { 
-            width: 140px; height: 12px; background: linear-gradient(to right, #ef3022, #ffa500, #3a8448); 
+            width: 140px; height: 12px; background: linear-gradient(to right, #ef3022, #ffa500, #ffff00, #3a8448); 
             margin: 0 10px; border: 1px solid white; 
         }
     </style>
 
     <script>
+        // Callback to handle login and trigger 3D scene
         window.handleCredentialResponse = (response) => {
             const login = document.getElementById('login-screen');
             login.style.opacity = '0';
@@ -124,7 +125,7 @@
                     init(data.values);
                     animate();
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Data fetch failed:", err); }
         }
 
         function init(data) {
@@ -139,7 +140,7 @@
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Coloring logic based on instructions
+                // [Instruction 6] Color Logic
                 if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; 
                 else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; 
                 else element.style.backgroundColor = 'rgba(58, 132, 72, 0.75)'; 
@@ -165,26 +166,40 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table: 20x10 Arrangement
+                // [Instruction 14] Table: 20x10 Arrangement
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Double Helix math
+            // Target: Sphere
+            const vector = new THREE.Vector3();
+            for (let i = 0, l = objects.length; i < l; i++) {
+                const phi = Math.acos(-1 + (2 * i) / l);
+                const theta = Math.sqrt(l * Math.PI) * phi;
+                const object = new THREE.Object3D();
+                object.position.setFromSphericalCoords(800, phi, theta);
+                vector.copy(object.position).multiplyScalar(2);
+                object.lookAt(vector);
+                targets.sphere.push(object);
+            }
+
+            // [Instruction 14] Double Helix math
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
                 const y = -(i * 8) + 450;
                 const object = new THREE.Object3D();
                 object.position.setFromCylindricalCoords(900, theta, y);
-                const vector = new THREE.Vector3(object.position.x * 2, object.position.y, object.position.z * 2);
+                vector.x = object.position.x * 2;
+                vector.y = object.position.y;
+                vector.z = object.position.z * 2;
                 object.lookAt(vector);
                 targets.helix.push(object);
             }
 
-            // Grid: 5x4x10
+            // [Instruction 14 / Image C] Grid: 5x4x10
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
@@ -201,6 +216,7 @@
             controls.addEventListener('change', render);
 
             document.getElementById('table').addEventListener('click', () => transform(targets.table, 2000));
+            document.getElementById('sphere').addEventListener('click', () => transform(targets.sphere, 2000));
             document.getElementById('helix').addEventListener('click', () => transform(targets.helix, 2000));
             document.getElementById('grid').addEventListener('click', () => transform(targets.grid, 2000));
 
