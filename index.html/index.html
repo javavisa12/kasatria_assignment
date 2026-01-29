@@ -8,7 +8,7 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; }
         
-        /* [Image A] Welcome Page - EXACT REPRODUCTION */
+        /* [Image A] Welcome Page Styling */
         #login-screen { 
             position: absolute; width: 100%; height: 100%; background: #ffffff; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -17,13 +17,13 @@
         #login-screen h1 { font-size: 42px; color: #000; margin-bottom: 20px; font-weight: 700; }
         #login-screen p { font-size: 18px; color: #333; margin-bottom: 40px; }
 
-        /* [Image B] Data Tile Structure */
+        /* [Image B] Tile Structure */
         .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.4); border: 1px solid rgba(127,255,255,0.2); text-align: center; }
         .element img { width: 90px; height: 90px; margin-top: 15px; border: 1px solid #fff; object-fit: cover; }
         .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; text-transform: uppercase; }
         .element .details { font-size: 9px; color: rgba(255,255,255,0.85); margin-top: 5px; }
 
-        /* Navigation Menu - Including PYRAMID */
+        /* [Image 44bb73.png] Navigation Menu with Pyramid */
         #menu { position: absolute; bottom: 30px; width: 100%; text-align: center; display: none; z-index: 2000; }
         button { 
             color: #00ffff; background: transparent; border: 1px solid #00ffff; 
@@ -38,7 +38,7 @@
             background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 4px;
         }
         .gradient-bar { 
-            width: 140px; height: 12px; background: linear-gradient(to right, #ef3022, #ffa500, #ffff00, #3a8448); 
+            width: 140px; height: 12px; background: linear-gradient(to right, #ef3022, #ffa500, #3a8448); 
             margin: 0 10px; border: 1px solid white; 
         }
     </style>
@@ -118,7 +118,7 @@
                     init(data.values);
                     animate();
                 }
-            } catch (err) { console.error("Sheets Fetch Error:", err); }
+            } catch (err) { console.error(err); }
         }
 
         function init(data) {
@@ -133,7 +133,7 @@
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // instruction coloring logic
+                // Color Logic based on Legend
                 if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; 
                 else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; 
                 else element.style.backgroundColor = 'rgba(58, 132, 72, 0.75)'; 
@@ -159,30 +159,34 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Target: Table (20x10)
+                // Table Target
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Target: Pyramid Geometry Math
+            // --- Pyramid Math Logic ---
             let layer = 0, count = 0, layerLimit = 1;
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
-                // Stacks tiles in expanding square layers: 1, 4, 9, 16...
-                let xPos = (count % layerLimit) * 200 - (layerLimit * 100) + 100;
-                let zPos = Math.floor(count / layerLimit) * 200 - (layerLimit * 100) + 100;
-                let yPos = -layer * 200 + 800;
+                // Centers tiles in each square layer
+                let xPos = (count % layerLimit) * 220 - (layerLimit * 110) + 110;
+                let zPos = Math.floor(count / layerLimit) * 220 - (layerLimit * 110) + 110;
+                let yPos = -layer * 220 + 800;
+
                 object.position.set(xPos, yPos, zPos);
                 targets.pyramid.push(object);
+
                 count++;
                 if (count >= layerLimit * layerLimit) {
-                    layer++; layerLimit++; count = 0;
+                    layer++;
+                    layerLimit++;
+                    count = 0;
                 }
             }
 
-            // Target: Sphere
+            // Sphere Target
             const vector = new THREE.Vector3();
             for (let i = 0, l = objects.length; i < l; i++) {
                 const phi = Math.acos(-1 + (2 * i) / l);
@@ -194,19 +198,21 @@
                 targets.sphere.push(object);
             }
 
-            // Target: Double Helix
+            // Double Helix math
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
                 const y = -(i * 8) + 450;
                 const object = new THREE.Object3D();
                 object.position.setFromCylindricalCoords(900, theta, y);
-                vector.x = object.position.x * 2; vector.y = object.position.y; vector.z = object.position.z * 2;
+                vector.x = object.position.x * 2;
+                vector.y = object.position.y;
+                vector.z = object.position.z * 2;
                 object.lookAt(vector);
                 targets.helix.push(object);
             }
 
-            // Target: Grid (5x4x10)
+            // Grid Target (5x4x10)
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
@@ -222,7 +228,6 @@
             controls = new TrackballControls(camera, renderer.domElement);
             controls.addEventListener('change', render);
 
-            // Connect Buttons to Transitions
             document.getElementById('table').addEventListener('click', () => transform(targets.table, 2000));
             document.getElementById('sphere').addEventListener('click', () => transform(targets.sphere, 2000));
             document.getElementById('helix').addEventListener('click', () => transform(targets.helix, 2000));
@@ -252,7 +257,12 @@
             render();
         }
 
-        function animate() { requestAnimationFrame(animate); TWEEN.update(); controls.update(); }
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            controls.update();
+        }
+
         function render() { renderer.render(scene, camera); }
     </script>
 </body>
