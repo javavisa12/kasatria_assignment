@@ -8,7 +8,7 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; }
         
-        /* [Image A] Refined Login Screen */
+        /* [Image A] Welcome Page Styling */
         #login-screen { 
             position: absolute; width: 100%; height: 100%; background: #ffffff; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -66,7 +66,14 @@
              data-callback="handleCredentialResponse"
              data-auto_prompt="false">
         </div>
-        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+        <div class="g_id_signin" 
+             data-type="standard" 
+             data-shape="pill" 
+             data-theme="filled_blue" 
+             data-text="signin_with" 
+             data-size="large" 
+             data-logo_alignment="left">
+        </div>
     </div>
 
     <div id="container"></div>
@@ -132,7 +139,7 @@
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Coloring logic
+                // Coloring logic based on instructions
                 if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; 
                 else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; 
                 else element.style.backgroundColor = 'rgba(58, 132, 72, 0.75)'; 
@@ -158,14 +165,14 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table: 20x10
+                // Table: 20x10 Arrangement
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Double Helix
+            // Double Helix math
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
