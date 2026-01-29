@@ -81,7 +81,8 @@
         <button id="sphere">SPHERE</button>
         <button id="helix">HELIX</button>
         <button id="grid">GRID</button>
-        <button id="pyramid">PYRAMID</button> </div>
+        <button id="pyramid">PYRAMID</button>
+    </div>
 
     <script type="importmap">
         {
@@ -157,31 +158,28 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table Target (20x10)
+                // Table Target
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // Pyramid (Tetrahedron) Target Math
+            // --- Pyramid Math ---
             let layer = 0, count = 0, layerLimit = 1;
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
-                
-                // Calculate grid position within the current layer
-                let xPos = (count % layerLimit) * 200 - (layerLimit * 100) + 100;
-                let zPos = Math.floor(count / layerLimit) * 200 - (layerLimit * 100) + 100;
-                let yPos = -layer * 200 + 600;
+                // Centers tiles in each square layer
+                let xPos = (count % layerLimit) * 220 - (layerLimit * 110) + 110;
+                let zPos = Math.floor(count / layerLimit) * 220 - (layerLimit * 110) + 110;
+                let yPos = -layer * 220 + 800;
 
                 object.position.set(xPos, yPos, zPos);
                 targets.pyramid.push(object);
 
                 count++;
                 if (count >= layerLimit * layerLimit) {
-                    layer++;
-                    layerLimit++;
-                    count = 0;
+                    layer++; layerLimit++; count = 0;
                 }
             }
 
@@ -197,21 +195,19 @@
                 targets.sphere.push(object);
             }
 
-            // Double Helix math
+            // Double Helix Target
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
                 const y = -(i * 8) + 450;
                 const object = new THREE.Object3D();
                 object.position.setFromCylindricalCoords(900, theta, y);
-                vector.x = object.position.x * 2;
-                vector.y = object.position.y;
-                vector.z = object.position.z * 2;
+                vector.x = object.position.x * 2; vector.y = object.position.y; vector.z = object.position.z * 2;
                 object.lookAt(vector);
                 targets.helix.push(object);
             }
 
-            // Grid: 5x4x10
+            // Grid Target (5x4x10)
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
@@ -256,12 +252,7 @@
             render();
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            TWEEN.update();
-            controls.update();
-        }
-
+        function animate() { requestAnimationFrame(animate); TWEEN.update(); controls.update(); }
         function render() { renderer.render(scene, camera); }
     </script>
 </body>
