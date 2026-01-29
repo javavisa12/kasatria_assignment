@@ -84,7 +84,7 @@
         window.addEventListener('google-login-success', fetchSheetData);
 
         async function fetchSheetData() {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:F?key=${API_KEY}`;
+            const url = `https://docs.google.com/spreadsheets/d/1egK0W82Oltho21pc79BA0QcUdQv31f5wYEtiC-wN_Sk/edit?usp=sharing`;
             try {
                 const response = await fetch(url);
                 const data = await response.json();
@@ -221,3 +221,4 @@
     </script>
 </body>
 </html>
+
