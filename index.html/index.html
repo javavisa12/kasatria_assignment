@@ -8,32 +8,36 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: Helvetica, sans-serif; }
         
-        /* Image A Design Implementation */
-        #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center; }
+        /* [Image A] Login Screen */
+        #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
         #login-screen h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
         #login-screen p { color: #666; margin-bottom: 30px; max-width: 400px; padding: 0 20px; }
 
-        #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; }
-        
-        /* Image B: Tile Data Structure Styling */
-        .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; }
+        /* [Image B] Data Tile Structure */
+        .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; transition: background-color 0.3s; }
+        .element:hover { box-shadow: 0px 0px 12px rgba(0,255,255,0.75); border: 1px solid rgba(127,255,255,0.75); }
         .element img { width: 85px; height: 85px; margin-top: 15px; border: 1px solid white; object-fit: cover; border-radius: 4px; }
-        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; padding: 0 5px; text-transform: uppercase; }
-        .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 5px; }
+        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; padding: 0 5px; text-transform: uppercase; overflow: hidden; }
+        .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 5px; padding: 0 5px; }
 
-        button { color: #8ff; background: transparent; border: 1px solid #8ff; padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 0 5px; }
+        /* UI Controls */
+        #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; }
+        button { color: #8ff; background: transparent; border: 1px solid #8ff; padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 0 5px; font-weight: bold; }
         button:hover { background-color: rgba(0,255,255,0.2); }
+
+        /* [Image B] Color Legend */
+        #legend { position: absolute; bottom: 80px; right: 20px; display: none; align-items: center; color: white; font-size: 12px; }
+        .gradient-bar { width: 150px; height: 10px; background: linear-gradient(to right, #ef3022, #ffa500, #3a8448); margin: 0 10px; border: 1px solid white; }
+
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; display: none; font-size: 18px; }
     </style>
 
     <script>
-        // GLOBAL CALLBACK: Fixes the "callback is not a function" error
+        // MUST BE ATTACHED TO WINDOW FOR GOOGLE GSI
         window.handleCredentialResponse = (response) => {
-            console.log("Login Successful");
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('menu').style.display = 'block';
-            
-            // Dispatch custom event to trigger the 3D module
-            window.dispatchEvent(new CustomEvent('google-login-success'));
+            document.getElementById('loading').style.display = 'block';
+            window.dispatchEvent(new CustomEvent('login-success'));
         };
     </script>
 </head>
@@ -50,7 +54,15 @@
         <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue"></div>
     </div>
 
+    <div id="loading">Initialising 3D Scene...</div>
     <div id="container"></div>
+
+    <div id="legend">
+        <span>LOW</span>
+        <div class="gradient-bar"></div>
+        <span>High</span>
+    </div>
+
     <div id="menu">
         <button id="table">TABLE</button>
         <button id="sphere">SPHERE</button>
@@ -80,24 +92,25 @@
         const objects = [];
         const targets = { table: [], sphere: [], helix: [], grid: [] };
 
-        window.addEventListener('google-login-success', fetchSheetData);
+        window.addEventListener('login-success', fetchSheetData);
 
         async function fetchSheetData() {
-            // Target Sheet1 and the range A2:F
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/1egK0W82Oltho21pc79BA0QcUdQv31f5wYEtiC-wN_Sk/values/Sheet1!A2:F?key=${API_KEY}`;
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:F?key=${API_KEY}`;
             try {
                 const response = await fetch(url);
-                if (!response.ok) {
-                    const text = await response.text();
-                    console.error("API Response was not JSON. Check Sheet sharing settings. Received:", text);
-                    return;
-                }
+                if (!response.ok) throw new Error('Ensure Sheet is shared to "Anyone with the link"');
                 const data = await response.json();
                 if (data.values) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('menu').style.display = 'block';
+                    document.getElementById('legend').style.display = 'flex';
                     init(data.values);
                     animate();
                 }
-            } catch (error) { console.error("Data fetch failed:", error); }
+            } catch (err) {
+                alert('Fetch Error: ' + err.message);
+                console.error(err);
+            }
         }
 
         function init(data) {
@@ -107,19 +120,16 @@
 
             data.forEach((row, i) => {
                 const [name, photo, age, country, interest, netWorth] = row;
-                
-                // Parse Net Worth for coloring logic
                 const nw = parseFloat(netWorth.replace(/[$,]/g, ''));
 
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Background Coloring Logic based on Net Worth instructions
-                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.8)'; // Red
-                else if (nw >= 100000 && nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.8)'; // Orange
-                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.8)'; // Green
+                // [Instruction 6] Net Worth Coloring
+                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; // Red
+                else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; // Orange
+                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.75)'; // Green
 
-                // Build Tile Content according to Image B
                 const img = document.createElement('img');
                 img.src = photo;
                 element.appendChild(img);
@@ -141,9 +151,9 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table: 20x10 Arrangement
+                // [Instruction 14] Table: 20x10 Arrangement
                 const tableObj = new THREE.Object3D();
-                tableObj.position.x = ((i % 20) * 170) - 1600;
+                tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
@@ -160,11 +170,11 @@
                 targets.sphere.push(object);
             }
 
-            // Helix: Double Helix Implementation
+            // [Instruction 14] Helix: DOUBLE HELIX
             for (let i = 0, l = objects.length; i < l; i++) {
-                const strand = (i % 2 === 0) ? 0 : Math.PI; // Creates two separate strands
-                const theta = i * 0.2 + strand;
-                const y = -(i * 10) + 500;
+                const strand = (i % 2 === 0) ? 0 : Math.PI; // Offset for 2 strands
+                const theta = i * 0.175 + strand;
+                const y = -(i * 8) + 450;
                 const object = new THREE.Object3D();
                 object.position.setFromCylindricalCoords(900, theta, y);
                 vector.x = object.position.x * 2;
@@ -174,12 +184,12 @@
                 targets.helix.push(object);
             }
 
-            // Grid: 5x4x10 Arrangement as per Image C
+            // [Instruction 14 / Image C] Grid: 5x4x10
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
                 object.position.y = (-(Math.floor(i / 5) % 4) * 400) + 600;
-                object.position.z = (Math.floor(i / 20)) * -800 + 800;
+                object.position.z = (Math.floor(i / 20)) * -1000 + 500;
                 targets.grid.push(object);
             }
 
@@ -188,6 +198,8 @@
             document.getElementById('container').appendChild(renderer.domElement);
 
             controls = new TrackballControls(camera, renderer.domElement);
+            controls.minDistance = 500;
+            controls.maxDistance = 6000;
             controls.addEventListener('change', render);
 
             document.getElementById('table').addEventListener('click', () => transform(targets.table, 2000));
@@ -228,4 +240,3 @@
     </script>
 </body>
 </html>
-
