@@ -8,7 +8,7 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; }
         
-        /* [Image A] Welcome Page Styling */
+        /* [Image 43b7bb.png] Welcome Page Style */
         #login-screen { 
             position: absolute; width: 100%; height: 100%; background: #ffffff; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -17,13 +17,13 @@
         #login-screen h1 { font-size: 42px; color: #000; margin-bottom: 20px; font-weight: 700; }
         #login-screen p { font-size: 18px; color: #333; margin-bottom: 40px; }
 
-        /* [Image B] Tile Structure */
+        /* [Image 36fa2a.jpg] Tile Structure */
         .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.4); border: 1px solid rgba(127,255,255,0.2); text-align: center; }
         .element img { width: 90px; height: 90px; margin-top: 15px; border: 1px solid #fff; object-fit: cover; }
         .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; text-transform: uppercase; }
         .element .details { font-size: 9px; color: rgba(255,255,255,0.85); margin-top: 5px; }
 
-        /* [Image 44bb73.png] Navigation Menu with Pyramid */
+        /* Menu with PYRAMID Button Added */
         #menu { position: absolute; bottom: 30px; width: 100%; text-align: center; display: none; z-index: 2000; }
         button { 
             color: #00ffff; background: transparent; border: 1px solid #00ffff; 
@@ -128,14 +128,14 @@
 
             data.forEach((row, i) => {
                 const [name, photo, age, country, interest, netWorth] = row;
-                const nw = parseFloat(netWorth.replace(/[$,]/g, ''));
+                const nwValue = parseFloat(netWorth.replace(/[$,]/g, ''));
 
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Color Logic based on Legend
-                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; 
-                else if (nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; 
+                // [Image 442912.png] Coloring Logic
+                if (nwValue < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.75)'; 
+                else if (nwValue < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.75)'; 
                 else element.style.backgroundColor = 'rgba(58, 132, 72, 0.75)'; 
 
                 const img = document.createElement('img');
@@ -159,27 +159,31 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table Target
+                // Table Target (20x10)
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600; 
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
                 targets.table.push(tableObj);
             });
 
-            // --- Pyramid Math Logic ---
+            // --- 4-Face Pyramid (Tetrahedron) Math ---
             let layer = 0, count = 0, layerLimit = 1;
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
-                // Centers tiles in each square layer
-                let xPos = (count % layerLimit) * 220 - (layerLimit * 110) + 110;
-                let zPos = Math.floor(count / layerLimit) * 220 - (layerLimit * 110) + 110;
-                let yPos = -layer * 220 + 800;
+                
+                // Calculation for triangular layers (1, 3, 6, 10...)
+                let rowInLayer = Math.floor((-1 + Math.sqrt(1 + 8 * count)) / 2);
+                let colInRow = count - (rowInLayer * (rowInLayer + 1) / 2);
+                
+                let xPos = colInRow * 200 - (rowInLayer * 100);
+                let zPos = rowInLayer * 180 - (layer * 100);
+                let yPos = -layer * 200 + 800;
 
                 object.position.set(xPos, yPos, zPos);
                 targets.pyramid.push(object);
 
                 count++;
-                if (count >= layerLimit * layerLimit) {
+                if (count >= (layerLimit * (layerLimit + 1) / 2)) {
                     layer++;
                     layerLimit++;
                     count = 0;
@@ -198,16 +202,14 @@
                 targets.sphere.push(object);
             }
 
-            // Double Helix math
+            // Double Helix Target
             for (let i = 0, l = objects.length; i < l; i++) {
                 const strand = (i % 2 === 0) ? 0 : Math.PI; 
                 const theta = i * 0.175 + strand;
                 const y = -(i * 8) + 450;
                 const object = new THREE.Object3D();
                 object.position.setFromCylindricalCoords(900, theta, y);
-                vector.x = object.position.x * 2;
-                vector.y = object.position.y;
-                vector.z = object.position.z * 2;
+                vector.x = object.position.x * 2; vector.y = object.position.y; vector.z = object.position.z * 2;
                 object.lookAt(vector);
                 targets.helix.push(object);
             }
@@ -228,6 +230,7 @@
             controls = new TrackballControls(camera, renderer.domElement);
             controls.addEventListener('change', render);
 
+            // Connect Buttons
             document.getElementById('table').addEventListener('click', () => transform(targets.table, 2000));
             document.getElementById('sphere').addEventListener('click', () => transform(targets.sphere, 2000));
             document.getElementById('helix').addEventListener('click', () => transform(targets.helix, 2000));
@@ -257,12 +260,7 @@
             render();
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            TWEEN.update();
-            controls.update();
-        }
-
+        function animate() { requestAnimationFrame(animate); TWEEN.update(); controls.update(); }
         function render() { renderer.render(scene, camera); }
     </script>
 </body>
