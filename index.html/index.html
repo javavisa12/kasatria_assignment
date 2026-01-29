@@ -1,30 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kasatria Software Developer Assignment</title>
+    <title>Kasatria - Software Developer Assignment</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; font-family: Helvetica, sans-serif; }
         
-        /* Image A: Login Screen Styling */
+        /* Image A Design */
         #login-screen { position: absolute; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center; }
         #login-screen h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
         #login-screen p { color: #666; margin-bottom: 30px; max-width: 400px; padding: 0 20px; }
 
         #menu { position: absolute; bottom: 20px; width: 100%; text-align: center; display: none; }
         
-        /* Image B: Tile Data Structure */
+        /* Image B: Tile Data Structure Styling */
         .element { width: 140px; height: 180px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; }
-        .element:hover { box-shadow: 0px 0px 12px rgba(0,255,255,0.75); border: 1px solid rgba(127,255,255,0.75); }
-        .element img { width: 90px; height: 90px; margin-top: 15px; border: 1px solid white; object-fit: cover; }
-        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 8px; padding: 0 5px; text-transform: uppercase; }
-        .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 4px; line-height: 1.2; }
+        .element img { width: 85px; height: 85px; margin-top: 15px; border: 1px solid white; object-fit: cover; border-radius: 4px; }
+        .element .name { font-size: 11px; font-weight: bold; color: #fff; margin-top: 10px; padding: 0 5px; text-transform: uppercase; }
+        .element .details { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 5px; }
 
         button { color: #8ff; background: transparent; border: 1px solid #8ff; padding: 8px 15px; cursor: pointer; text-transform: uppercase; margin: 0 5px; }
         button:hover { background-color: rgba(0,255,255,0.2); }
     </style>
+
+    <script>
+        // GLOBAL CALLBACK FIX: Attaching to window so Google GSI can find it
+        window.handleCredentialResponse = (response) => {
+            console.log("Login Successful");
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+            
+            // Dispatch custom event to tell the 3D module to start
+            window.dispatchEvent(new CustomEvent('google-login-success'));
+        };
+    </script>
 </head>
 <body>
 
@@ -69,11 +81,7 @@
         const objects = [];
         const targets = { table: [], sphere: [], helix: [], grid: [] };
 
-        window.handleCredentialResponse = (response) => {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('menu').style.display = 'block';
-            fetchSheetData();
-        };
+        window.addEventListener('google-login-success', fetchSheetData);
 
         async function fetchSheetData() {
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A2:F?key=${API_KEY}`;
@@ -99,11 +107,12 @@
                 const element = document.createElement('div');
                 element.className = 'element';
                 
-                // Coloring Logic 
-                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.7)'; 
-                else if (nw >= 100000 && nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.7)'; 
-                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.7)'; 
+                // Color Logic 
+                if (nw < 100000) element.style.backgroundColor = 'rgba(239, 48, 34, 0.8)'; // Red < $100K
+                else if (nw >= 100000 && nw < 200000) element.style.backgroundColor = 'rgba(255, 165, 0, 0.8)'; // Orange > $100K
+                else element.style.backgroundColor = 'rgba(58, 132, 72, 0.8)'; // Green > $200K
 
+                // Image B Structure [cite: 13, 95]
                 const img = document.createElement('img');
                 img.src = photo;
                 element.appendChild(img);
@@ -115,7 +124,7 @@
 
                 const details = document.createElement('div');
                 details.className = 'details';
-                details.innerHTML = `${interest}<br>${country} | Age: ${age}`;
+                details.innerHTML = `${interest}<br>${country}`;
                 element.appendChild(details);
 
                 const objectCSS = new CSS3DObject(element);
@@ -125,7 +134,7 @@
                 scene.add(objectCSS);
                 objects.push(objectCSS);
 
-                // Table: 20x10 arrangement 
+                // Table: 20x10 
                 const tableObj = new THREE.Object3D();
                 tableObj.position.x = ((i % 20) * 170) - 1600;
                 tableObj.position.y = -(Math.floor(i / 20) * 210) + 900;
@@ -158,7 +167,7 @@
                 targets.helix.push(object);
             }
 
-            // Grid: 5x4x10 arrangement 
+            // Grid: 5x4x10 
             for (let i = 0; i < objects.length; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 5) * 400) - 800;
